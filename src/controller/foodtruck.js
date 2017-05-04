@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import {Router} from 'express';
 import FoodTruck from '../model/foodtruck';
 import Review from '../model/review';
+import bodyParser from 'body-parser';
 
 export default({config, db}) => {
   let api = Router();
@@ -83,6 +84,16 @@ export default({config, db}) => {
     });
   });
 
+  // get all foodtrucks for specific foodtype ‘/v1/foodtruck/foodtype/:foodtype’
+  api.get('/foodtype/:foodtype', (req, res) => {
+    FoodTruck.find({foodtype: req.params.foodtype}, (err, foodtrucks) => {
+      if(err) {
+        res.send(err);
+      }
+      res.json(foodtrucks);
+    });
+  });
+
 
   // UPDATE
   // update existing foodtruck '/v1/foodtruck/:id'
@@ -92,6 +103,9 @@ export default({config, db}) => {
         res.send(err);
       }
       foodtruck.name = req.body.name;
+      foodtruck.foodtype = req.body.foodtype;
+      foodtruck.avgcost = req.body.avgcost;
+      foodtruck.geometry.coordinates = req.body.geometry.coordinates;
       foodtruck.save(err => {
         if(err) {
           res.send(err);
