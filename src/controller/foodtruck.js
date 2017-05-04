@@ -102,18 +102,69 @@ export default({config, db}) => {
   });
 
   // DELETE
-  // delete foodtruck '/v1/foodtruck/:id'
+  // delete foodtruck & its reviews '/v1/foodtruck/:id'
   api.delete('/:id', (req, res) => {
-    FoodTruck.remove({
-      _id: req.params.id
-    }, (err, foodtruck) => {
+    // first make sure id is provided
+    FoodTruck.findById(req.params.id, (err, foodtruck) => {
       if(err) {
-        res.send(err);
+        res.status(500).send(err);
+        return;
       }
-      res.json({message: "FoodTruck Successfully Removed!"});
+      if(foodtruck === null) {
+        res.status(404).send("FoodTruck Not Found");
+        return;
+      }
+      FoodTruck.remove({
+        _id: req.params.id
+      }, (err, foodtruck) => {
+        if(err) {
+          res.status(500).send(err);
+          return;
+        }
+        Review.remove({
+          foodtruck: req.params.id
+        }, (err, review) => {
+          if(err) {
+            res.send(err);
+          }
+          res.json({message: "FoodTruck and its Reviews Successfully Removed"});
+        });
+      });
     });
   });
 
+  // Delete a specific review
+  // '/v1/foodtruck/reviews/:id'
+  api.delete('/reviews/:id', (req, res) => {
+    // First find the review to remove
+    Review.findById(req.params.id, (err, review) => {
+      if (err) {
+        res.send(err);
+      }
+      // Set a variable with the food truck id
+      let id = review.foodtruck;
+      // Get the food truck
+      FoodTruck.findById(id, (err, truck) => {
+        // Remove (pull) the review id from the reviews array
+        truck.reviews.pull(review);
+        // Save the truck with the removed array element
+        truck.save(err => {
+          if (err) {
+            res.send(err);
+          }
+          // Finally remove the actual review
+          Review.remove({
+            _id: req.params.id
+          }, (err, review) => {
+            if (err) {
+              res.send(err);
+            }
+            res.json({"message": "review successfully removed."});
+          });
+        });
+      });
+    });
+  });
 
   return api;
 }
