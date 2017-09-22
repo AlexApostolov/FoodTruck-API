@@ -3,13 +3,14 @@ import {Router} from 'express';
 import FoodTruck from '../model/foodtruck';
 import Review from '../model/review';
 import bodyParser from 'body-parser';
+import {authenticate} from '../middleware/authMiddleware';
 
 export default({config, db}) => {
   let api = Router();
 
   // CREATE
   // add new foodtruck '/vi1/foodtruck/add'
-  api.post('/add', (req, res) => {
+  api.post('/add', authenticate, (req, res) => {
     let newFoodTruck = new FoodTruck();
     newFoodTruck.name = req.body.name;
     newFoodTruck.foodtype = req.body.foodtype;
@@ -97,7 +98,7 @@ export default({config, db}) => {
 
   // UPDATE
   // update existing foodtruck '/v1/foodtruck/:id'
-  api.put('/:id', (req, res) => {
+  api.put('/:id', authenticate, (req, res) => {
     FoodTruck.findById(req.params.id, (err,foodtruck) => {
       if (err) {
         res.send(err);
@@ -117,7 +118,7 @@ export default({config, db}) => {
 
   // DELETE
   // delete foodtruck & its reviews '/v1/foodtruck/:id'
-  api.delete('/:id', (req, res) => {
+  api.delete('/:id', authenticate, (req, res) => {
     // first make sure id is provided
     FoodTruck.findById(req.params.id, (err, foodtruck) => {
       if(err) {

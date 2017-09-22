@@ -51,3 +51,6 @@ jspm_packages
 
 # dist Folder
 dist
+
+# secret used for authentication middleware
+src/config/secret.js
